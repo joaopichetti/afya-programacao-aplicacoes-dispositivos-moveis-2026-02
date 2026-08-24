@@ -4,8 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,8 +30,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import br.com.afya.composebasico.ui.theme.ComposeBasicoTheme
 
 class MainActivity : ComponentActivity() {
@@ -48,61 +52,81 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun CartaoAluno(modifier: Modifier = Modifier) {
-    Card(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clickable { },
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .clickable { },
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 4.dp
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            )
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Avatar do Aluno",
-                    modifier = Modifier
-                        .size(56.dp),
-                    tint = Color(0xFFCE0058)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(
-                        text = "Acadêmico Afya ADS"
-                    )
-                    Text(
-                        text = "4o Período - Dispositivos Móveis"
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                OutlinedButton(onClick = {}) {
-                    Text("Detalhes")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFCE0058)
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Acessar Notas")
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Avatar do Aluno",
+                        modifier = Modifier
+                            .size(56.dp),
+                        tint = Color(0xFFCE0058)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "Acadêmico Afya ADS"
+                        )
+                        Text(
+                            text = "4o Período - Dispositivos Móveis"
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(onClick = {}) {
+                        Text("Detalhes")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFCE0058)
+                        )
+                    ) {
+                        Text("Acessar Notas")
+                    }
                 }
             }
         }
+        Text(
+            text = "MATRICULADO",
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 12.dp)
+                .background(
+                    color = Color(0xFFCE0058),
+                    shape = RoundedCornerShape(6.dp)
+                )
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        )
     }
 }
 
