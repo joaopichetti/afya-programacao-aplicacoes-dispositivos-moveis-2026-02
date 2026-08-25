@@ -15,6 +15,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Contador(modifier: Modifier = Modifier) {
-    var contador = 0
+    val contador: MutableState<Int> = mutableStateOf(0)
 
     Column(
         modifier = modifier
@@ -50,14 +52,14 @@ fun Contador(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            "Valor: $contador",
+            "Valor: ${contador.value}",
             fontSize = 28.sp
         )
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = {
-                contador++
-                Log.d(TAG, "Valor na memória: $contador")
+                contador.value++
+                Log.d(TAG, "Valor na memória: ${contador.value}")
             }
         ) {
             Text("Incrementar")
