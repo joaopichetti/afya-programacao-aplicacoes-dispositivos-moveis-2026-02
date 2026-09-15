@@ -165,11 +165,11 @@ private fun FormularioConteudo(
 ) {
     val editando = aluno != null
 
-    var nome by remember { mutableStateOf(aluno?.nome ?: "") }
-    var idade by remember { mutableStateOf(aluno?.idade?.toString() ?: "") }
-    var mensalidade by remember { mutableStateOf(aluno?.mensalidade?.toString() ?: "") }
-    var ativo by remember { mutableStateOf(aluno?.ativo ?: true) }
-    var linguagens by remember { mutableStateOf(aluno?.linguagens ?: emptyList()) }
+    var nome by remember(aluno) { mutableStateOf(aluno?.nome ?: "") }
+    var idade by remember(aluno) { mutableStateOf(aluno?.idade?.toString() ?: "") }
+    var mensalidade by remember(aluno) { mutableStateOf(aluno?.mensalidade?.toString() ?: "") }
+    var ativo by remember(aluno) { mutableStateOf(aluno?.ativo ?: true) }
+    var linguagens by remember(aluno) { mutableStateOf(aluno?.linguagens ?: emptyList()) }
     var novaLinguagem by remember { mutableStateOf("") }
 
     var nomeErro by remember { mutableStateOf(false) }

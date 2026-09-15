@@ -4,16 +4,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import br.com.afya.cadastroalunos.model.Aluno
+import br.com.afya.cadastroalunos.network.RetrofitClient
 import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.FormularioAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 import br.com.afya.cadastroalunos.ui.state.SalvarAlunoUiState
+import kotlinx.coroutines.launch
 
 class AlunoViewModel : ViewModel() {
 
-    private val _alunos = mutableListOf<Aluno>()
-    private var proximoId = 1
+    private val apiService = RetrofitClient.alunoApiService
 
     // Estados da tela de listagem
     var listaUiState: ListaAlunosUiState by mutableStateOf(ListaAlunosUiState.Carregando)
@@ -39,14 +41,31 @@ class AlunoViewModel : ViewModel() {
 
     fun carregarAlunos() {
         listaUiState = ListaAlunosUiState.Carregando
-        listaUiState = ListaAlunosUiState.Sucesso(_alunos.toList())
+        viewModelScope.launch {
+            try {
+                val alunos = apiService.listarAlunos()
+                listaUiState = ListaAlunosUiState.Sucesso(alunos)
+            } catch (e: Exception) {
+                listaUiState = ListaAlunosUiState.Erro(
+                    "Erro ao carregar alunos. Tente novamente."
+                )
+            }
+        }
     }
 
     fun excluir(aluno: Aluno) {
         exclusaoUiState = ExclusaoAlunoUiState.Excluindo
-        _alunos.removeAll { it.id == aluno.id }
-        exclusaoUiState = ExclusaoAlunoUiState.Sucesso
-        listaUiState = ListaAlunosUiState.Sucesso(_alunos.toList())
+        viewModelScope.launch {
+            try {
+                apiService.excluirAluno(aluno.id)
+                exclusaoUiState = ExclusaoAlunoUiState.Sucesso
+                carregarAlunos()
+            } catch (e: Exception) {
+                exclusaoUiState = ExclusaoAlunoUiState.Erro(
+                    "Erro ao excluir aluno. Tente novamente."
+                )
+            }
+        }
     }
 
     fun limparExclusaoUiState() {
@@ -65,25 +84,34 @@ class AlunoViewModel : ViewModel() {
     fun carregarAluno(id: Int) {
         formularioUiState = FormularioAlunoUiState.Carregando
         salvarUiState = SalvarAlunoUiState.Ocioso
-        val aluno = _alunos.find { it.id == id }
-        if (aluno != null) {
-            formularioUiState = FormularioAlunoUiState.Sucesso(aluno)
-        } else {
-            formularioUiState = FormularioAlunoUiState.Erro("Aluno não encontrado")
+        viewModelScope.launch {
+            try {
+                val aluno = apiService.buscarAlunoPorId(id)
+                formularioUiState = FormularioAlunoUiState.Sucesso(aluno)
+            } catch (e: Exception) {
+                formularioUiState = FormularioAlunoUiState.Erro(
+                    "Erro ao carregar aluno. Tente novamente."
+                )
+            }
         }
     }
 
     fun salvar(aluno: Aluno) {
         salvarUiState = SalvarAlunoUiState.Salvando
-        if (aluno.id == 0) {
-            _alunos.add(aluno.copy(id = proximoId++))
-        } else {
-            val index = _alunos.indexOfFirst { it.id == aluno.id }
-            if (index != -1) {
-                _alunos[index] = aluno
+        viewModelScope.launch {
+            try {
+                if (aluno.id == 0) {
+                    apiService.criarAluno(aluno)
+                } else {
+                    apiService.atualizarAluno(aluno.id, aluno)
+                }
+                salvarUiState = SalvarAlunoUiState.Sucesso
+            } catch (e: Exception) {
+                salvarUiState = SalvarAlunoUiState.Erro(
+                    "Erro ao salvar aluno. Tente novamente."
+                )
             }
         }
-        salvarUiState = SalvarAlunoUiState.Sucesso
     }
 
     fun limparSalvarUiState() {

@@ -55,6 +55,7 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
                 },
                 onTentarNovamente = { },
                 onSalvoComSucesso = {
+                    viewModel.limparSalvarUiState()
                     viewModel.carregarAlunos()
                     navController.popBackStack()
                 },
@@ -87,6 +88,7 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
                     viewModel.carregarAluno(alunoId)
                 },
                 onSalvoComSucesso = {
+                    viewModel.limparSalvarUiState()
                     viewModel.carregarAlunos()
                     navController.popBackStack()
                 },
