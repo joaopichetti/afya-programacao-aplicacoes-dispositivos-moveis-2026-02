@@ -11,6 +11,7 @@ import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.FormularioAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 import br.com.afya.cadastroalunos.ui.state.SalvarAlunoUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AlunoViewModel : ViewModel() {
@@ -42,6 +43,7 @@ class AlunoViewModel : ViewModel() {
     fun carregarAlunos() {
         listaUiState = ListaAlunosUiState.Carregando
         viewModelScope.launch {
+            delay(2000L)
             try {
                 val alunos = apiService.listarAlunos()
                 listaUiState = ListaAlunosUiState.Sucesso(alunos)
@@ -56,6 +58,7 @@ class AlunoViewModel : ViewModel() {
     fun excluir(aluno: Aluno) {
         exclusaoUiState = ExclusaoAlunoUiState.Excluindo
         viewModelScope.launch {
+            delay(2000L)
             try {
                 apiService.excluirAluno(aluno.id)
                 exclusaoUiState = ExclusaoAlunoUiState.Sucesso
@@ -85,6 +88,7 @@ class AlunoViewModel : ViewModel() {
         formularioUiState = FormularioAlunoUiState.Carregando
         salvarUiState = SalvarAlunoUiState.Ocioso
         viewModelScope.launch {
+            delay(2000L)
             try {
                 val aluno = apiService.buscarAlunoPorId(id)
                 formularioUiState = FormularioAlunoUiState.Sucesso(aluno)
@@ -99,6 +103,7 @@ class AlunoViewModel : ViewModel() {
     fun salvar(aluno: Aluno) {
         salvarUiState = SalvarAlunoUiState.Salvando
         viewModelScope.launch {
+            delay(2000L)
             try {
                 if (aluno.id == 0) {
                     apiService.criarAluno(aluno)
