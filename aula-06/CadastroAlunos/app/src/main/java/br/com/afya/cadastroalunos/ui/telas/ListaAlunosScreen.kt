@@ -1,7 +1,9 @@
 package br.com.afya.cadastroalunos.ui.telas
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,33 +18,62 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import br.com.afya.cadastroalunos.model.Aluno
-import br.com.afya.cadastroalunos.ui.theme.CadastroAlunosTheme
+import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
+import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListaAlunosScreen(
-    alunos: List<Aluno>,
+    listaUiState: ListaAlunosUiState,
+    exclusaoUiState: ExclusaoAlunoUiState,
     onAdicionarClick: () -> Unit,
     onEditarClick: (Aluno) -> Unit,
-    onExcluirClick: (Aluno) -> Unit
+    onExcluirClick: (Aluno) -> Unit,
+    onTentarNovamente: () -> Unit,
+    onExclusaoMensagemMostrada: () -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Reage aos estados da exclusão exibindo Snackbar
+    LaunchedEffect(exclusaoUiState) {
+        when (exclusaoUiState) {
+            is ExclusaoAlunoUiState.Sucesso -> {
+                snackbarHostState.showSnackbar("Aluno excluído com sucesso")
+                onExclusaoMensagemMostrada()
+            }
+            is ExclusaoAlunoUiState.Erro -> {
+                snackbarHostState.showSnackbar(exclusaoUiState.mensagem)
+                onExclusaoMensagemMostrada()
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Cadastro de Alunos") },
@@ -58,34 +89,74 @@ fun ListaAlunosScreen(
             }
         }
     ) { innerPadding ->
-        if (alunos.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Nenhum aluno cadastrado",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // Indicador de progresso linear durante a exclusão
+            if (exclusaoUiState is ExclusaoAlunoUiState.Excluindo) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
-            ) {
-                items(alunos, key = { it.id }) { aluno ->
-                    AlunoCard(
-                        aluno = aluno,
-                        onEditarClick = { onEditarClick(aluno) },
-                        onExcluirClick = { onExcluirClick(aluno) }
-                    )
+
+            when (listaUiState) {
+                is ListaAlunosUiState.Carregando -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                is ListaAlunosUiState.Sucesso -> {
+                    if (listaUiState.alunos.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Nenhum aluno cadastrado",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            items(listaUiState.alunos, key = { it.id }) { aluno ->
+                                AlunoCard(
+                                    aluno = aluno,
+                                    onEditarClick = { onEditarClick(aluno) },
+                                    onExcluirClick = { onExcluirClick(aluno) }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                is ListaAlunosUiState.Erro -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = listaUiState.mensagem,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedButton(onClick = onTentarNovamente) {
+                            Text("Tentar novamente")
+                        }
+                    }
                 }
             }
         }
@@ -96,11 +167,10 @@ fun ListaAlunosScreen(
 fun AlunoCard(
     aluno: Aluno,
     onEditarClick: () -> Unit,
-    onExcluirClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onExcluirClick: () -> Unit
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -162,29 +232,5 @@ fun AlunoCard(
                 )
             }
         }
-    }
-}
-
-@Preview(
-    showBackground = true,
-    showSystemUi = true
-)
-@Composable
-fun AlunoCardPreview() {
-    CadastroAlunosTheme {
-        AlunoCard(
-            modifier = Modifier.padding(
-                vertical = 30.dp,
-                horizontal = 10.dp
-            ),
-            aluno = Aluno(
-                nome = "João",
-                idade = 34,
-                mensalidade = 1000.0,
-                ativo = false
-            ),
-            onEditarClick = {},
-            onExcluirClick = {}
-        )
     }
 }

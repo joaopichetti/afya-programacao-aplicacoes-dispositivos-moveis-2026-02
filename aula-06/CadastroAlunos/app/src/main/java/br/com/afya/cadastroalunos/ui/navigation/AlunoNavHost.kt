@@ -1,8 +1,8 @@
 package br.com.afya.cadastroalunos.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,12 +14,13 @@ import br.com.afya.cadastroalunos.ui.viewmodel.AlunoViewModel
 
 @Composable
 fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
-    val navController: NavHostController = rememberNavController()
+    val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "lista") {
         composable("lista") {
             ListaAlunosScreen(
-                alunos = viewModel.alunos,
+                listaUiState = viewModel.listaUiState,
+                exclusaoUiState = viewModel.exclusaoUiState,
                 onAdicionarClick = {
                     navController.navigate("formulario")
                 },
@@ -28,40 +29,69 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
                 },
                 onExcluirClick = { aluno ->
                     viewModel.excluir(aluno)
+                },
+                onTentarNovamente = {
+                    viewModel.carregarAlunos()
+                },
+                onExclusaoMensagemMostrada = {
+                    viewModel.limparExclusaoUiState()
                 }
             )
         }
 
         composable("formulario") {
+            LaunchedEffect(Unit) {
+                viewModel.prepararNovoAluno()
+            }
+
             FormularioAlunoScreen(
-                aluno = null,
+                formularioUiState = viewModel.formularioUiState,
+                salvarUiState = viewModel.salvarUiState,
                 onSalvarClick = { aluno ->
-                    viewModel.inserir(aluno)
-                    navController.popBackStack()
+                    viewModel.salvar(aluno)
                 },
                 onVoltarClick = {
                     navController.popBackStack()
+                },
+                onTentarNovamente = { },
+                onSalvoComSucesso = {
+                    viewModel.carregarAlunos()
+                    navController.popBackStack()
+                },
+                onErroMostrado = {
+                    viewModel.limparSalvarUiState()
                 }
             )
         }
 
         composable(
             route = "formulario/{alunoId}",
-            arguments = listOf(navArgument("alunoId") {
-                type = NavType.IntType
-            })
+            arguments = listOf(navArgument("alunoId") { type = NavType.IntType })
         ) { backStackEntry ->
             val alunoId = backStackEntry.arguments?.getInt("alunoId") ?: 0
-            val aluno = viewModel.buscarPorId(alunoId)
+
+            LaunchedEffect(alunoId) {
+                viewModel.carregarAluno(alunoId)
+            }
 
             FormularioAlunoScreen(
-                aluno = aluno,
-                onSalvarClick = { alunoAtualizado ->
-                    viewModel.atualizar(alunoAtualizado)
-                    navController.popBackStack()
+                formularioUiState = viewModel.formularioUiState,
+                salvarUiState = viewModel.salvarUiState,
+                onSalvarClick = { aluno ->
+                    viewModel.salvar(aluno)
                 },
                 onVoltarClick = {
                     navController.popBackStack()
+                },
+                onTentarNovamente = {
+                    viewModel.carregarAluno(alunoId)
+                },
+                onSalvoComSucesso = {
+                    viewModel.carregarAlunos()
+                    navController.popBackStack()
+                },
+                onErroMostrado = {
+                    viewModel.limparSalvarUiState()
                 }
             )
         }
