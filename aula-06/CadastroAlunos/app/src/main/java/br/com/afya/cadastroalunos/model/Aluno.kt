@@ -7,5 +7,6 @@ data class Aluno(
     val mensalidade: Double = 0.0,
     val ativo: Boolean = true,
     val linguagens: List<String> = emptyList(),
+//    @SerializedName("data_de_cadastro")
     val dataDeCadastro: String? = null
 )
