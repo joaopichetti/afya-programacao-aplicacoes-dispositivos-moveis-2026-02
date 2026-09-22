@@ -7,21 +7,27 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.afya.cadastroalunos.data.local.AppDatabase
+import br.com.afya.cadastroalunos.data.local.preferences.AppPreferencesManager
 import br.com.afya.cadastroalunos.data.repository.AlunoRepository
 import br.com.afya.cadastroalunos.model.Aluno
+import br.com.afya.cadastroalunos.model.OrdenacaoAluno
 import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.FormularioAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 import br.com.afya.cadastroalunos.ui.state.SalvarAlunoUiState
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class AlunoViewModel @JvmOverloads constructor(
     application: Application,
     private val repository: AlunoRepository = AlunoRepository(
         AppDatabase.obterInstancia(application).alunoDao()
-    )
+    ),
+    private val preferencesManager: AppPreferencesManager =
+        AppPreferencesManager(application)
 ) : AndroidViewModel(application) {
 
     // Estados da tela de listagem
@@ -38,6 +44,11 @@ class AlunoViewModel @JvmOverloads constructor(
     var salvarUiState: SalvarAlunoUiState by mutableStateOf(SalvarAlunoUiState.Ocioso)
         private set
 
+    var ordenacaoAtual: OrdenacaoAluno by mutableStateOf(preferencesManager.obterOrdenacao())
+        private set
+
+    private val ordenacaoFlow = MutableStateFlow(preferencesManager.obterOrdenacao())
+
     private var alunosJob: Job? = null
 
     init {
@@ -53,11 +64,20 @@ class AlunoViewModel @JvmOverloads constructor(
     // Operações da tela de listagem
     // ============================
 
+    fun alterarOrdenacao(novaOrdenacao: OrdenacaoAluno) {
+        ordenacaoAtual = novaOrdenacao
+        preferencesManager.salvarOrdenacao(novaOrdenacao)
+        ordenacaoFlow.value = novaOrdenacao
+    }
+
     fun observarAlunos() {
         alunosJob?.cancel()
         listaUiState = ListaAlunosUiState.Carregando
         alunosJob = viewModelScope.launch {
             repository.alunosEmTempoReal
+                .combine(ordenacaoFlow) { alunos, ordenacao ->
+                    ordenarAlunos(alunos, ordenacao)
+                }
                 .catch {
                     listaUiState = ListaAlunosUiState.Erro(
                         "Erro ao carregar alunos do banco local. Tente novamente"
@@ -66,6 +86,17 @@ class AlunoViewModel @JvmOverloads constructor(
                 .collect { alunos ->
                     listaUiState = ListaAlunosUiState.Sucesso(alunos)
                 }
+        }
+    }
+
+    private fun ordenarAlunos(alunos: List<Aluno>, ordenacao: OrdenacaoAluno): List<Aluno> {
+        return when (ordenacao) {
+            OrdenacaoAluno.NOME_ASC -> alunos.sortedBy { it.nome.lowercase() }
+            OrdenacaoAluno.NOME_DESC -> alunos.sortedByDescending { it.nome.lowercase() }
+            OrdenacaoAluno.MENSALIDADE_ASC -> alunos.sortedBy { it.mensalidade }
+            OrdenacaoAluno.MENSALIDADE_DESC -> alunos.sortedByDescending { it.mensalidade }
+            OrdenacaoAluno.IDADE_ASC -> alunos.sortedBy { it.idade }
+            OrdenacaoAluno.IDADE_DESC -> alunos.sortedByDescending { it.idade }
         }
     }
 
