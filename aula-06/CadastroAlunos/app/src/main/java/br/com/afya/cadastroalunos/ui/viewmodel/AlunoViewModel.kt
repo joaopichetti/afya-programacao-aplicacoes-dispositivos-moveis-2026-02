@@ -1,22 +1,28 @@
 package br.com.afya.cadastroalunos.ui.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.afya.cadastroalunos.data.local.AppDatabase
+import br.com.afya.cadastroalunos.data.repository.AlunoRepository
 import br.com.afya.cadastroalunos.model.Aluno
-import br.com.afya.cadastroalunos.network.RetrofitClient
 import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.FormularioAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 import br.com.afya.cadastroalunos.ui.state.SalvarAlunoUiState
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
-class AlunoViewModel : ViewModel() {
-
-    private val apiService = RetrofitClient.alunoApiService
+class AlunoViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repository: AlunoRepository = AlunoRepository(
+        AppDatabase.obterInstancia(application).alunoDao()
+    )
+) : AndroidViewModel(application) {
 
     // Estados da tela de listagem
     var listaUiState: ListaAlunosUiState by mutableStateOf(ListaAlunosUiState.Carregando)
@@ -32,38 +38,44 @@ class AlunoViewModel : ViewModel() {
     var salvarUiState: SalvarAlunoUiState by mutableStateOf(SalvarAlunoUiState.Ocioso)
         private set
 
+    private var alunosJob: Job? = null
+
     init {
-        carregarAlunos()
+        observarAlunos()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        alunosJob?.cancel()
     }
 
     // ============================
     // Operações da tela de listagem
     // ============================
 
-    fun carregarAlunos() {
+    fun observarAlunos() {
+        alunosJob?.cancel()
         listaUiState = ListaAlunosUiState.Carregando
-        viewModelScope.launch {
-            delay(2000L)
-            try {
-                val alunos = apiService.listarAlunos()
-                listaUiState = ListaAlunosUiState.Sucesso(alunos)
-            } catch (e: Exception) {
-                listaUiState = ListaAlunosUiState.Erro(
-                    "Erro ao carregar alunos. Tente novamente."
-                )
-            }
+        alunosJob = viewModelScope.launch {
+            repository.alunosEmTempoReal
+                .catch {
+                    listaUiState = ListaAlunosUiState.Erro(
+                        "Erro ao carregar alunos do banco local. Tente novamente"
+                    )
+                }
+                .collect { alunos ->
+                    listaUiState = ListaAlunosUiState.Sucesso(alunos)
+                }
         }
     }
 
     fun excluir(aluno: Aluno) {
         exclusaoUiState = ExclusaoAlunoUiState.Excluindo
         viewModelScope.launch {
-            delay(2000L)
             try {
-                apiService.excluirAluno(aluno.id)
+                repository.removerAluno(aluno)
                 exclusaoUiState = ExclusaoAlunoUiState.Sucesso
-                carregarAlunos()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 exclusaoUiState = ExclusaoAlunoUiState.Erro(
                     "Erro ao excluir aluno. Tente novamente."
                 )
@@ -88,12 +100,17 @@ class AlunoViewModel : ViewModel() {
         formularioUiState = FormularioAlunoUiState.Carregando
         salvarUiState = SalvarAlunoUiState.Ocioso
         viewModelScope.launch {
-            delay(2000L)
-            try {
-                val aluno = apiService.buscarAlunoPorId(id)
-                formularioUiState = FormularioAlunoUiState.Sucesso(aluno)
-            } catch (e: Exception) {
-                formularioUiState = FormularioAlunoUiState.Erro(
+            formularioUiState = try {
+                val aluno = repository.obterPorId(id)
+                if (aluno != null) {
+                    FormularioAlunoUiState.Sucesso(aluno)
+                } else {
+                    FormularioAlunoUiState.Erro(
+                        "Aluno não encontrado no banco local."
+                    )
+                }
+            } catch (_: Exception) {
+                FormularioAlunoUiState.Erro(
                     "Erro ao carregar aluno. Tente novamente."
                 )
             }
@@ -103,15 +120,10 @@ class AlunoViewModel : ViewModel() {
     fun salvar(aluno: Aluno) {
         salvarUiState = SalvarAlunoUiState.Salvando
         viewModelScope.launch {
-            delay(2000L)
             try {
-                if (aluno.id == 0) {
-                    apiService.criarAluno(aluno)
-                } else {
-                    apiService.atualizarAluno(aluno.id, aluno)
-                }
+                repository.salvarAluno(aluno)
                 salvarUiState = SalvarAlunoUiState.Sucesso
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 salvarUiState = SalvarAlunoUiState.Erro(
                     "Erro ao salvar aluno. Tente novamente."
                 )

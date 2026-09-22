@@ -31,7 +31,7 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
                     viewModel.excluir(aluno)
                 },
                 onTentarNovamente = {
-                    viewModel.carregarAlunos()
+                    viewModel.observarAlunos()
                 },
                 onExclusaoMensagemMostrada = {
                     viewModel.limparExclusaoUiState()
@@ -56,7 +56,7 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
                 onTentarNovamente = { },
                 onSalvoComSucesso = {
                     viewModel.limparSalvarUiState()
-                    viewModel.carregarAlunos()
+                    viewModel.observarAlunos()
                     navController.popBackStack()
                 },
                 onErroMostrado = {
@@ -89,7 +89,7 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
                 },
                 onSalvoComSucesso = {
                     viewModel.limparSalvarUiState()
-                    viewModel.carregarAlunos()
+                    viewModel.observarAlunos()
                     navController.popBackStack()
                 },
                 onErroMostrado = {
