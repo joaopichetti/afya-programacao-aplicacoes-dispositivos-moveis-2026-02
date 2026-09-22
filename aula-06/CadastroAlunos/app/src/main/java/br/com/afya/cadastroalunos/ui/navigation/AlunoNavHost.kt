@@ -21,6 +21,10 @@ fun AlunoNavHost(viewModel: AlunoViewModel = viewModel()) {
             ListaAlunosScreen(
                 listaUiState = viewModel.listaUiState,
                 exclusaoUiState = viewModel.exclusaoUiState,
+                ordenacaoAtual = viewModel.ordenacaoAtual,
+                onOrdenacaoChange = {
+                    viewModel.alterarOrdenacao(it)
+                },
                 onAdicionarClick = {
                     navController.navigate("formulario")
                 },

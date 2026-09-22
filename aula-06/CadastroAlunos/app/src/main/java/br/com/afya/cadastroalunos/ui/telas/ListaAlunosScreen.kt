@@ -13,12 +13,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -34,13 +38,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import br.com.afya.cadastroalunos.model.Aluno
+import br.com.afya.cadastroalunos.model.OrdenacaoAluno
 import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 
@@ -49,6 +57,8 @@ import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 fun ListaAlunosScreen(
     listaUiState: ListaAlunosUiState,
     exclusaoUiState: ExclusaoAlunoUiState,
+    ordenacaoAtual: OrdenacaoAluno,
+    onOrdenacaoChange: (OrdenacaoAluno) -> Unit,
     onAdicionarClick: () -> Unit,
     onEditarClick: (Aluno) -> Unit,
     onExcluirClick: (Aluno) -> Unit,
@@ -77,6 +87,47 @@ fun ListaAlunosScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Cadastro de Alunos") },
+                actions = {
+                    var menuAberto by remember { mutableStateOf(false) }
+
+                    IconButton(onClick = { menuAberto = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Sort,
+                            contentDescription = "Ordenar alunos"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuAberto,
+                        onDismissRequest = { menuAberto = false }
+                    ) {
+                        OrdenacaoAluno.entries.forEach { opcao ->
+                            val selecionado = opcao == ordenacaoAtual
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = opcao.titulo,
+                                        fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (selecionado) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selecionado",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    menuAberto = false
+                                    onOrdenacaoChange(opcao)
+                                }
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
