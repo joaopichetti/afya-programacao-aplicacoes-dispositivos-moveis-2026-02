@@ -54,7 +54,6 @@ import br.com.afya.cadastroalunos.model.OrdenacaoAluno
 import br.com.afya.cadastroalunos.ui.state.ExclusaoAlunoUiState
 import br.com.afya.cadastroalunos.ui.state.ListaAlunosUiState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListaAlunosScreen(
     listaUiState: ListaAlunosUiState,
