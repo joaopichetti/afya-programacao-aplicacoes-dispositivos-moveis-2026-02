@@ -3,6 +3,7 @@ package br.com.afya.cadastroalunos.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -20,17 +21,22 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import br.com.afya.cadastroalunos.ui.telas.DetalhesTurmaScreen
 import br.com.afya.cadastroalunos.ui.telas.FormularioAlunoScreen
 import br.com.afya.cadastroalunos.ui.telas.FormularioDisciplinaScreen
+import br.com.afya.cadastroalunos.ui.telas.FormularioTurmaScreen
 import br.com.afya.cadastroalunos.ui.telas.ListaAlunosScreen
 import br.com.afya.cadastroalunos.ui.telas.ListaDisciplinasScreen
+import br.com.afya.cadastroalunos.ui.telas.ListaTurmasScreen
 import br.com.afya.cadastroalunos.ui.viewmodel.AlunoViewModel
 import br.com.afya.cadastroalunos.ui.viewmodel.DisciplinaViewModel
+import br.com.afya.cadastroalunos.ui.viewmodel.TurmaViewModel
 
 @Composable
 fun AppNavHost(
     alunoViewModel: AlunoViewModel = viewModel(),
-    disciplinaViewModel: DisciplinaViewModel = viewModel()
+    disciplinaViewModel: DisciplinaViewModel = viewModel(),
+    turmaViewModel: TurmaViewModel = viewModel()
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -38,7 +44,9 @@ fun AppNavHost(
 
     // A BottomBar é exibida nas telas principais dos agrupamentos (listas)
     val isTopLevelRoute = currentDestination?.let { dest ->
-        dest.hasRoute<AppRoute.AlunosLista>() || dest.hasRoute<AppRoute.DisciplinasLista>()
+        dest.hasRoute<AppRoute.AlunosLista>() ||
+                dest.hasRoute<AppRoute.DisciplinasLista>() ||
+                dest.hasRoute<AppRoute.TurmasLista>()
     } ?: true
 
     Scaffold(
@@ -81,6 +89,25 @@ fun AppNavHost(
                             )
                         },
                         label = { Text("Disciplinas") }
+                    )
+
+                    NavigationBarItem(
+                        selected = currentDestination?.hasRoute<AppRoute.TurmasLista>() == true,
+                        onClick = {
+                            navController.navigate(AppRoute.TurmasLista) {
+                                popUpTo(navController.graph.id) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Groups,
+                                contentDescription = "Turmas"
+                            )
+                        },
+                        label = { Text("Turmas") }
                     )
                 }
             }
@@ -221,6 +248,103 @@ fun AppNavHost(
                     },
                     onErroMostrado = {
                         disciplinaViewModel.limparSalvarUiState()
+                    }
+                )
+            }
+
+            // ============================
+            // Agrupamento: Turmas
+            // ============================
+            composable<AppRoute.TurmasLista> {
+                ListaTurmasScreen(
+                    listaUiState = turmaViewModel.listaUiState,
+                    exclusaoUiState = turmaViewModel.exclusaoUiState,
+                    ordenacaoAtual = turmaViewModel.ordenacaoAtual,
+                    onOrdenacaoChange = { turmaViewModel.alterarOrdenacao(it) },
+                    onAdicionarClick = {
+                        navController.navigate(AppRoute.TurmaFormulario())
+                    },
+                    onDetalhesClick = { turma ->
+                        navController.navigate(AppRoute.TurmaDetalhes(turmaId = turma.id))
+                    },
+                    onEditarClick = { turma ->
+                        navController.navigate(AppRoute.TurmaFormulario(turmaId = turma.id))
+                    },
+                    onExcluirClick = { turma ->
+                        turmaViewModel.excluir(turma)
+                    },
+                    onTentarNovamente = {
+                        turmaViewModel.carregarTurmas()
+                    },
+                    onExclusaoMensagemMostrada = {
+                        turmaViewModel.limparExclusaoUiState()
+                    }
+                )
+            }
+
+            composable<AppRoute.TurmaFormulario> { backStackEntry ->
+                val args = backStackEntry.toRoute<AppRoute.TurmaFormulario>()
+                val turmaId = args.turmaId
+
+                LaunchedEffect(turmaId) {
+                    if (turmaId == 0) {
+                        turmaViewModel.prepararNovaTurma()
+                    } else {
+                        turmaViewModel.carregarTurma(turmaId)
+                    }
+                }
+
+                FormularioTurmaScreen(
+                    formularioUiState = turmaViewModel.formularioUiState,
+                    salvarUiState = turmaViewModel.salvarUiState,
+                    onSalvarClick = { turma ->
+                        turmaViewModel.salvar(turma)
+                    },
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    },
+                    onTentarNovamente = {
+                        if (turmaId == 0) {
+                            turmaViewModel.prepararNovaTurma()
+                        } else {
+                            turmaViewModel.carregarTurma(turmaId)
+                        }
+                    },
+                    onSalvoComSucesso = {
+                        turmaViewModel.limparSalvarUiState()
+                        turmaViewModel.carregarTurmas()
+                        navController.popBackStack()
+                    },
+                    onErroMostrado = {
+                        turmaViewModel.limparSalvarUiState()
+                    }
+                )
+            }
+
+            composable<AppRoute.TurmaDetalhes> { backStackEntry ->
+                val args = backStackEntry.toRoute<AppRoute.TurmaDetalhes>()
+                val turmaId = args.turmaId
+
+                LaunchedEffect(turmaId) {
+                    turmaViewModel.carregarDetalhesTurma(turmaId)
+                }
+
+                DetalhesTurmaScreen(
+                    detalhesUiState = turmaViewModel.detalhesUiState,
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    },
+                    onEditarClick = { turma ->
+                        navController.navigate(AppRoute.TurmaFormulario(turmaId = turma.id))
+                    },
+                    onAdicionarAlunoClick = { tId, aId ->
+                        turmaViewModel.adicionarAlunoNaTurma(tId, aId)
+                    },
+                    onRemoverAlunoClick = { tId, aId ->
+                        turmaViewModel.removerAlunoDaTurma(tId, aId)
+                    },
+                    onTentarNovamente = {
+                        turmaViewModel.carregarDetalhesTurma(turmaId)
                     }
                 )
             }

@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import br.com.afya.cadastroalunos.model.OrdenacaoAluno
 import br.com.afya.cadastroalunos.model.OrdenacaoDisciplina
+import br.com.afya.cadastroalunos.model.OrdenacaoTurma
 
 class AppPreferencesManager(context: Context) {
 
@@ -13,6 +14,7 @@ class AppPreferencesManager(context: Context) {
         private const val PREFS_FILE = "cadastro_alunos_preferences"
         private const val KEY_ORDENACAO = "pref_ordenacao_alunos"
         private const val KEY_ORDENACAO_DISCIPLINA = "pref_ordenacao_disciplinas"
+        private const val KEY_ORDENACAO_TURMA = "pref_ordenacao_turmas"
     }
 
     private val sharedPreferences: SharedPreferences =
@@ -41,6 +43,19 @@ class AppPreferencesManager(context: Context) {
             OrdenacaoDisciplina.valueOf(nomeEnum ?: OrdenacaoDisciplina.NOME_ASC.name)
         } catch (_: Exception) {
             OrdenacaoDisciplina.NOME_ASC
+        }
+    }
+
+    fun salvarOrdenacaoTurma(ordenacao: OrdenacaoTurma) {
+        sharedPreferences.edit { putString(KEY_ORDENACAO_TURMA, ordenacao.name) }
+    }
+
+    fun obterOrdenacaoTurma(): OrdenacaoTurma {
+        val nomeEnum = sharedPreferences.getString(KEY_ORDENACAO_TURMA, OrdenacaoTurma.NOME_ASC.name)
+        return try {
+            OrdenacaoTurma.valueOf(nomeEnum ?: OrdenacaoTurma.NOME_ASC.name)
+        } catch (_: Exception) {
+            OrdenacaoTurma.NOME_ASC
         }
     }
 }
