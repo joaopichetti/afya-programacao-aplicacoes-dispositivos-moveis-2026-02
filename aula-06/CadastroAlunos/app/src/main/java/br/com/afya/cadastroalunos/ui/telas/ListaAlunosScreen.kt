@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -66,6 +68,7 @@ fun ListaAlunosScreen(
     onExclusaoMensagemMostrada: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    var alunoParaExcluir by remember { mutableStateOf<Aluno?>(null) }
 
     // Reage aos estados da exclusão exibindo Snackbar
     LaunchedEffect(exclusaoUiState) {
@@ -82,56 +85,25 @@ fun ListaAlunosScreen(
         }
     }
 
+    alunoParaExcluir?.let { aluno ->
+        ConfirmacaoExclusaoDialog(
+            aluno = aluno,
+            onConfirmar = {
+                onExcluirClick(aluno)
+                alunoParaExcluir = null
+            },
+            onDispensar = {
+                alunoParaExcluir = null
+            }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Cadastro de Alunos") },
-                actions = {
-                    var menuAberto by remember { mutableStateOf(false) }
-
-                    IconButton(onClick = { menuAberto = true }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Sort,
-                            contentDescription = "Ordenar alunos"
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = menuAberto,
-                        onDismissRequest = { menuAberto = false }
-                    ) {
-                        OrdenacaoAluno.entries.forEach { opcao ->
-                            val selecionado = opcao == ordenacaoAtual
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = opcao.titulo,
-                                        fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                },
-                                trailingIcon = {
-                                    if (selecionado) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Selecionado",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    menuAberto = false
-                                    onOrdenacaoChange(opcao)
-                                }
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            ListaAlunosTopAppBar(
+                ordenacaoAtual = ordenacaoAtual,
+                onOrdenacaoChange = onOrdenacaoChange
             )
         },
         floatingActionButton = {
@@ -182,7 +154,7 @@ fun ListaAlunosScreen(
                                 AlunoCard(
                                     aluno = aluno,
                                     onEditarClick = { onEditarClick(aluno) },
-                                    onExcluirClick = { onExcluirClick(aluno) }
+                                    onExcluirClick = { alunoParaExcluir = aluno }
                                 )
                             }
                         }
@@ -284,4 +256,101 @@ fun AlunoCard(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ListaAlunosTopAppBar(
+    ordenacaoAtual: OrdenacaoAluno,
+    onOrdenacaoChange: (OrdenacaoAluno) -> Unit
+) {
+    TopAppBar(
+        title = { Text("Cadastro de Alunos") },
+        actions = {
+            var menuAberto by remember { mutableStateOf(false) }
+
+            IconButton(onClick = { menuAberto = true }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Sort,
+                    contentDescription = "Ordenar alunos"
+                )
+            }
+
+            DropdownMenu(
+                expanded = menuAberto,
+                onDismissRequest = { menuAberto = false }
+            ) {
+                OrdenacaoAluno.entries.forEach { opcao ->
+                    val selecionado = opcao == ordenacaoAtual
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = opcao.titulo,
+                                fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        },
+                        trailingIcon = {
+                            if (selecionado) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selecionado",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        },
+                        onClick = {
+                            menuAberto = false
+                            onOrdenacaoChange(opcao)
+                        }
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    )
+}
+
+@Composable
+fun ConfirmacaoExclusaoDialog(
+    aluno: Aluno,
+    onConfirmar: () -> Unit,
+    onDispensar: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDispensar,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error
+            )
+        },
+        title = {
+            Text(text = "Confirmar exclusão")
+        },
+        text = {
+            Text(text = "Deseja realmente excluir o aluno \"${aluno.nome}\"?")
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirmar
+            ) {
+                Text(
+                    text = "Excluir",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDispensar
+            ) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
