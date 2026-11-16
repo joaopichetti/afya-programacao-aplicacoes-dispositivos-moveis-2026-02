@@ -3,6 +3,8 @@ plugins {
   alias(libs.plugins.android.kotlin.multiplatform.library)
   alias(libs.plugins.android.lint)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.compose.multiplatform)
 }
 
 kotlin {
@@ -36,12 +38,6 @@ kotlin {
   // https://developer.android.com/kotlin/multiplatform/migrate
   val xcfName = "sharedKit"
 
-  iosX64 {
-    binaries.framework {
-      baseName = xcfName
-    }
-  }
-
   iosArm64 {
     binaries.framework {
       baseName = xcfName
@@ -68,6 +64,13 @@ kotlin {
         implementation(libs.ktor.serialization.kotlinx.json)
         implementation(libs.ktor.client.logging)
         implementation(libs.kotlinx.serialization.json)
+        implementation(libs.compose.multiplatform.runtime)
+        implementation(libs.compose.multiplatform.foundation)
+        implementation(libs.compose.multiplatform.ui)
+        implementation(libs.compose.multiplatform.ui.tooling.preview)
+        implementation(libs.compose.multiplatform.material3)
+        implementation(libs.compose.multiplatform.material.icons.core)
+        implementation(libs.androidx.lifecycle.viewmodel.compose.multiplatform)
       }
     }
 
@@ -97,4 +100,9 @@ kotlin {
       }
     }
   }
+}
+
+dependencies {
+  // Permite renderizar os @Preview do commonMain no Android Studio
+  "androidRuntimeClasspath"(libs.compose.multiplatform.ui.tooling)
 }
