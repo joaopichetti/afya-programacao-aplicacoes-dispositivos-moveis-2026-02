@@ -11,7 +11,7 @@ kotlin {
   // which platforms this KMP module supports.
   // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
   android {
-    namespace = "br.edu.utfpr.shared"
+    namespace = "br.com.afya.shared"
     compileSdk {
       version = release(37)
     }

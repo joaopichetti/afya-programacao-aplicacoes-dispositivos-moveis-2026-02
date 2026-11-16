@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "br.edu.utfpr.consultacepkmp"
+    namespace = "br.com.afya.consultacepkmp"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "br.edu.utfpr.consultacepkmp"
+        applicationId = "br.com.afya.consultacepkmp"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
