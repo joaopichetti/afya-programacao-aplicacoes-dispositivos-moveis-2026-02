@@ -1,4 +1,4 @@
-package br.com.afya.consultacepkmp.ui.theme
+package br.com.afya.shared.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

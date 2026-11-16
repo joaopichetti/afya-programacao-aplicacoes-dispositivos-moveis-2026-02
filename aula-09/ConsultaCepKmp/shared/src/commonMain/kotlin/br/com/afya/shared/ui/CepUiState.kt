@@ -1,4 +1,4 @@
-package br.com.afya.consultacepkmp.ui
+package br.com.afya.shared.ui
 
 import br.com.afya.shared.domain.model.Endereco
 

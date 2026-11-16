@@ -1,4 +1,4 @@
-package br.com.afya.consultacepkmp.ui
+package br.com.afya.shared.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class CepViewModel(
+internal class CepViewModel(
     private val repository: CepRepository = CepRepositoryImpl()
 ) : ViewModel() {
 

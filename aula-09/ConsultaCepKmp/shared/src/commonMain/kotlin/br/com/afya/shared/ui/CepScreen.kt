@@ -1,4 +1,4 @@
-package br.com.afya.consultacepkmp.ui
+package br.com.afya.shared.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -47,14 +47,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import br.com.afya.consultacepkmp.ui.theme.ConsultaCepKmpTheme
 import br.com.afya.shared.domain.model.Endereco
+import br.com.afya.shared.ui.theme.ConsultaCepKmpTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CepScreen(
+internal fun CepScreen(
     modifier: Modifier = Modifier,
-    viewModel: CepViewModel = viewModel()
+    viewModel: CepViewModel = viewModel { CepViewModel() }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val cepInput by viewModel.cepInput.collectAsState()
@@ -284,7 +284,7 @@ private fun formatarCep(cep: String): String {
 
 @Preview(showBackground = true)
 @Composable
-fun SuccessPreview() {
+private fun SuccessPreview() {
     ConsultaCepKmpTheme {
         SuccessStateContent(
             endereco = Endereco(
@@ -300,7 +300,7 @@ fun SuccessPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun ErrorPreview() {
+private fun ErrorPreview() {
     ConsultaCepKmpTheme {
         ErrorStateContent(mensagem = "CEP não encontrado.")
     }
