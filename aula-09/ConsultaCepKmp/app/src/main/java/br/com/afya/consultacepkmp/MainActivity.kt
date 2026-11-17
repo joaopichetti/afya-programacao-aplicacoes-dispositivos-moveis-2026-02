@@ -5,9 +5,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import br.com.afya.consultacepkmp.ui.CepScreen
-import br.com.afya.consultacepkmp.ui.theme.ConsultaCepKmpTheme
 import br.com.afya.shared.platform
+import br.com.afya.shared.ui.App
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,9 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         Log.i("MainActivity", "Hello from shared module: ${platform()}")
         setContent {
-            ConsultaCepKmpTheme {
-                CepScreen()
-            }
+            App()
         }
     }
 }
