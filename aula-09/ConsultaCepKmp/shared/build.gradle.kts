@@ -5,6 +5,8 @@ plugins {
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.compose.multiplatform)
+  alias(libs.plugins.ksp)
+  alias(libs.plugins.androidx.room)
 }
 
 kotlin {
@@ -73,6 +75,10 @@ kotlin {
         implementation(libs.compose.multiplatform.material3)
         implementation(libs.compose.multiplatform.material.icons.core)
         implementation(libs.androidx.lifecycle.viewmodel.compose.multiplatform)
+        implementation(libs.navigation.compose.multiplatform)
+        implementation(libs.androidx.room.runtime)
+        implementation(libs.androidx.sqlite.bundled)
+        implementation(libs.kotlinx.datetime)
       }
     }
 
@@ -110,7 +116,17 @@ kotlin {
   }
 }
 
+// Diretório onde o Room exporta o schema do banco (útil para versionar e criar migrations)
+room {
+  schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
   // Permite renderizar os @Preview do commonMain no Android Studio
   "androidRuntimeClasspath"(libs.compose.multiplatform.ui.tooling)
+  // Processador de anotações do Room (KSP), executado para cada target da aplicação
+  add("kspAndroid", libs.androidx.room.compiler)
+  add("kspJvm", libs.androidx.room.compiler)
+  add("kspIosArm64", libs.androidx.room.compiler)
+  add("kspIosSimulatorArm64", libs.androidx.room.compiler)
 }
