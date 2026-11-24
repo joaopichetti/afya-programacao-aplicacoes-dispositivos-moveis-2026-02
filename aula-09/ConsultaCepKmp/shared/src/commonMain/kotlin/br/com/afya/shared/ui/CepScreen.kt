@@ -14,13 +14,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,7 +58,8 @@ import br.com.afya.shared.ui.theme.ConsultaCepKmpTheme
 @Composable
 internal fun CepScreen(
     modifier: Modifier = Modifier,
-    viewModel: CepViewModel = viewModel { CepViewModel() }
+    viewModel: CepViewModel = viewModel { CepViewModel() },
+    onHistoricoClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val cepInput by viewModel.cepInput.collectAsState()
@@ -113,6 +118,21 @@ internal fun CepScreen(
                 enabled = uiState !is CepUiState.Loading
             ) {
                 Text(text = "Consultar CEP")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = onHistoricoClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.List,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                Text("Ver histórico")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -270,15 +290,6 @@ private fun EnderecoItem(label: String, valor: String) {
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium
         )
-    }
-}
-
-private fun formatarCep(cep: String): String {
-    val digitsOnly = cep.filter { it.isDigit() }
-    return if (digitsOnly.length == 8) {
-        "${digitsOnly.substring(0, 5)}-${digitsOnly.substring(5)}"
-    } else {
-        cep
     }
 }
 
